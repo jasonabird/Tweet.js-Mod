@@ -206,7 +206,7 @@ class ezTweet {
 
 	private function generateCFID() {
 		// The unique cached filename ID
-		return md5(serialize($this->data)).'.json';
+		return md5(serialize($this->data['request']['parameters'])).'.json';
 	}
 
 	private function pathify(&$path) {
