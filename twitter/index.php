@@ -18,7 +18,19 @@ https://github.com/themattharris/tmhOAuth
 
  */
 
-if(empty($_POST)) { die(); }
+header('content-type: application/json; charset=utf-8');
+$allowedServers = array(
+    'http://www.example.com'
+);
+
+$referrer = $_SERVER['HTTP_ORIGIN'];
+
+if (in_array($referrer, $allowedServers)) {
+    $allowString = 'Access-Control-Allow-Origin: '.$referrer;
+    header($allowString);
+}
+
+if(empty($_POST) && empty($_GET)) { die(); }
 
 class ezTweet {
 	/*************************************** config ***************************************/
@@ -52,11 +64,17 @@ class ezTweet {
 
 	/**************************************************************************************/
 
+    private $data;
+
 	public function __construct() {
 		// Initialize paths and etc.
 		$this->pathify($this->cache_dir);
 		$this->pathify($this->lib);
 		$this->message = '';
+        if (!empty($_POST))
+            $this->data = $_POST;
+        if (!empty($_GET))
+            $this->data = $_GET;
 
 		// Set server-side debug params
 		if($this->debug === true) {
@@ -66,13 +84,42 @@ class ezTweet {
 		}
 	}
 
+	public function is_valid_callback($subject) {
+	    $identifier_syntax = '/^[$_\p{L}][$_\p{L}\p{Mn}\p{Mc}\p{Nd}\p{Pc}\x{200C}\x{200D}]*+$/u';
+
+	    $reserved_words = array('break', 'do', 'instanceof', 'typeof', 'case',
+	      'else', 'new', 'var', 'catch', 'finally', 'return', 'void', 'continue',
+	      'for', 'switch', 'while', 'debugger', 'function', 'this', 'with',
+	      'default', 'if', 'throw', 'delete', 'in', 'try', 'class', 'enum',
+	      'extends', 'super', 'const', 'export', 'import', 'implements', 'let',
+	      'private', 'public', 'yield', 'interface', 'package', 'protected',
+	      'static', 'null', 'true', 'false');
+
+	    return preg_match($identifier_syntax, $subject)
+	        && ! in_array(mb_strtolower($subject, 'UTF-8'), $reserved_words);
+	}
+
+
 	public function fetch() {
-		echo json_encode(
+		$json = json_encode(
 			array(
 				'response' => json_decode($this->getJSON(), true),
 				'message' => ($this->debug) ? $this->message : false
 			)
 		);
+
+		# JSON if no callback
+		if( ! isset($_GET['callback'])) {
+			echo $json;
+			exit();
+		}
+
+		# JSONP if valid callback
+		if($this->is_valid_callback($_GET['callback'])) {
+			echo $_GET['callback'].'('.$json.')';
+			exit();
+		}
+		echo $json;
 	}
 
 	private function getJSON() {
@@ -142,7 +189,7 @@ class ezTweet {
 		require $this->lib.'tmhUtilities.php';
 
 		$tmhOAuth = new tmhOAuth(array(
-			'host'                  => $_POST['request']['host'],
+            'host'                  => $this->data['request']['host'],
 			'consumer_key'          => $this->consumer_key,
 			'consumer_secret'       => $this->consumer_secret,
 			'user_token'            => $this->user_token,
@@ -150,8 +197,8 @@ class ezTweet {
 			'curl_ssl_verifypeer'   => false
 		));
 
-		$url = $_POST['request']['url'];
-		$params = $_POST['request']['parameters'];
+		$url = $this->data['request']['url'];
+		$params = $this->data['request']['parameters'];
 
 		$tmhOAuth->request('GET', $tmhOAuth->url($url), $params);
 		return $tmhOAuth->response;
@@ -159,7 +206,7 @@ class ezTweet {
 
 	private function generateCFID() {
 		// The unique cached filename ID
-		return md5(serialize($_POST)).'.json';
+		return md5(serialize($this->data)).'.json';
 	}
 
 	private function pathify(&$path) {
@@ -176,5 +223,3 @@ class ezTweet {
 
 $ezTweet = new ezTweet;
 $ezTweet->fetch();
-
-?>

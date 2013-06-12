@@ -267,9 +267,8 @@
 				if (s.loading_text) $(widget).empty().append(loading);
 
 				$.ajax({
-					dataType: "json",
-					type: "post",
-					async: false,
+					dataType: "jsonp",
+					type: "get",
 					url: s.modpath || "/twitter/",
 					data: { request: build_api_request() },
 					success: function(data, status) {
@@ -304,7 +303,7 @@
 						if (s.refresh_interval) {
 							window.setTimeout(function() { $(widget).trigger("tweet:load"); }, 1000 * s.refresh_interval);
 						}
-					}
+                    }
 				});
 			}).trigger("tweet:load");
 		});
