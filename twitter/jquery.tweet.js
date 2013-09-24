@@ -33,7 +33,7 @@
 			refresh_interval: null ,                  // [integer]  optional number of seconds after which to reload tweets
 			twitter_url: "twitter.com",               // [string]   custom twitter url, if any (apigee, etc.)
 			twitter_api_url: "api.twitter.com",       // [string]   custom twitter api url, if any (apigee, etc.)
-			twitter_search_url: "search.twitter.com", // [string]   custom twitter search url, if any (apigee, etc.)
+			twitter_search_url: "twitter.com", // [string]   custom twitter search url, if any (apigee, etc.)
 			template: "{avatar}{time}{join}{text}",   // [string or function] template used to construct each tweet <li> - see code for available vars
 			comparator: function(tweet1, tweet2) {    // [function] comparator used to sort tweets (see Array.sort)
 				return tweet2["tweet_time"] - tweet1["tweet_time"];
@@ -46,7 +46,7 @@
 		}, o);
 
 		// See http://daringfireball.net/2010/07/improved_regex_for_matching_urls
-		var url_regexp = /\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/gi;
+		var url_regexp = /\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?Â«Â»â€œâ€â€˜â€™]))/gi;
 
 		// Expand values inside simple string templates with {placeholders}
 		function t(template, info) {
@@ -80,7 +80,7 @@
 			linkUser: replacer(/(^|[\W])@(\w+)/gi, "$1<span class=\"at\">@</span><a href=\"http://"+s.twitter_url+"/$2\">$2</a>"),
 			// Support various latin1 (\u00**) and arabic (\u06**) alphanumeric chars
 			linkHash: replacer(/(?:^| )[\#]+([\w\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u00ff\u0600-\u06ff]+)/gi,
-				' <a href="http://'+s.twitter_search_url+'/search?q=&tag=$1&lang=all'+((s.username && s.username.length == 1 && !s.list) ? '&from='+s.username.join("%2BOR%2B") : '')+'" class="tweet_hashtag">#$1</a>'),
+				' <a target="_blank" href="https://'+s.twitter_search_url+'/search?q=$1'+((s.username && s.username.length == 1 && !s.list) ? '&from='+s.username.join("%2BOR%2B") : '')+'" class="tweet_hashtag">#$1</a>'),
 			makeHeart: replacer(/(&lt;)+[3]/gi, "<tt class='heart'>&#x2665;</tt>")
 		});
 
@@ -218,6 +218,7 @@
 			var o = {};
 			o.item = item;
 			o.source = item.source;
+			console.log(item);
 			// The actual user name is not returned by all Twitter APIs, so please do not file an issue if it is empty.
 			o.name = item.from_user_name || item.user.name;
 			o.screen_name = item.from_user || item.user.screen_name;
@@ -239,7 +240,9 @@
 			o.tweet_raw_text = o.retweet ? ('RT @'+o.retweeted_screen_name+' '+item.retweeted_status.text) : item.text; // avoid '...' in long retweets
 			o.tweet_text = $([linkURLs(o.tweet_raw_text, o.entities)]).linkUser().linkHash()[0];
 			o.tweet_text_fancy = $([o.tweet_text]).makeHeart()[0];
-
+			
+			console.log(o.tweet_text);
+			
 			// Default spans, and pre-formatted blocks for common layouts
 			o.user = t('<a class="tweet_user" href="{user_url}">{screen_name}</a>', o);
 			o.join = s.join_text ? t(' <span class="tweet_join">{join_text}</span> ', o) : ' ';
