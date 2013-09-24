@@ -46,8 +46,7 @@
 		}, o);
 
 		// See http://daringfireball.net/2010/07/improved_regex_for_matching_urls
-		var url_regexp = /\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?Â«Â»â€œâ€â€˜â€™]))/gi;
-
+		var url_regexp = /\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/gi;
 		// Expand values inside simple string templates with {placeholders}
 		function t(template, info) {
 			if (typeof template === "string") {
@@ -218,7 +217,7 @@
 			var o = {};
 			o.item = item;
 			o.source = item.source;
-			console.log(item);
+			// console.log(item);
 			// The actual user name is not returned by all Twitter APIs, so please do not file an issue if it is empty.
 			o.name = item.from_user_name || item.user.name;
 			o.screen_name = item.from_user || item.user.screen_name;
@@ -240,9 +239,7 @@
 			o.tweet_raw_text = o.retweet ? ('RT @'+o.retweeted_screen_name+' '+item.retweeted_status.text) : item.text; // avoid '...' in long retweets
 			o.tweet_text = $([linkURLs(o.tweet_raw_text, o.entities)]).linkUser().linkHash()[0];
 			o.tweet_text_fancy = $([o.tweet_text]).makeHeart()[0];
-			
-			console.log(o.tweet_text);
-			
+			// console.log(o.tweet_text);
 			// Default spans, and pre-formatted blocks for common layouts
 			o.user = t('<a class="tweet_user" href="{user_url}">{screen_name}</a>', o);
 			o.join = s.join_text ? t(' <span class="tweet_join">{join_text}</span> ', o) : ' ';
